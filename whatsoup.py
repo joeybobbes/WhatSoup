@@ -80,8 +80,12 @@ def setup_selenium():
 
     # Load driver and chrome profile from local directories
     load_dotenv()
-    DRIVER_PATH = os.getenv('DRIVER_PATH')
-    CHROME_PROFILE = os.getenv('CHROME_PROFILE')
+    # DRIVER_PATH = os.getenv('DRIVER_PATH')
+    # CHROME_PROFILE = os.getenv('CHROME_PROFILE')
+    DRIVER_PATH = '/Users/joelkropelin/env/chromedriver'
+    CHROME_PROFILE = '/Users/joelkropelin/Library/Application Support/Google/Chrome/Profile 1'
+    print(DRIVER_PATH)
+    print(CHROME_PROFILE)
 
     # Configure selenium
     options = webdriver.ChromeOptions()
@@ -209,8 +213,7 @@ def get_chats(driver):
                     # Get the last message (xpath == div element that holds a span w/ title attribute set to last chat message)
                     last_chat_msg_element = selected_chat.find_element_by_xpath(
                         "./div/div[2]/div[2]/div")
-                    last_chat_msg = last_chat_msg_element.find_element_by_tag_name(
-                        'span').get_attribute('title')
+                    last_chat_msg = ''
 
                     # Strip last message of left-to-right directional encoding ('\u202a' and '\u202c') if it exists
                     if '\u202a' in last_chat_msg or '\u202c' in last_chat_msg:
@@ -807,30 +810,33 @@ def find_chat_datetime_when_copyable_does_not_exist(message, last_msg_date):
 
 
 def parse_datetime(text, time_only=False):
-    '''Try parsing and returning datetimes in a North American standard, otherwise raise a ValueError'''
-    # TODO lazy approach to handling variances of North America date/time values MM/DD/YYYY AM/PM or YYYY-MM-DD A.M./P.M.
+    return datetime.strptime('2/15/2021 2:35 PM', '%m/%d/%Y %I:%M %p')
+    #'''Try parsing and returning datetimes in a North American standard, otherwise raise a ValueError'''
+    ## TODO lazy approach to handling variances of North America date/time values MM/DD/YYYY AM/PM or YYYY-MM-DD A.M./P.M.
 
-    # Normalize the text
-    text = text.upper().replace("A.M.", "AM").replace("P.M.", "PM")
+    ## Normalize the text
+    ## text = text.upper().replace("A.M.", "AM").replace("P.M.", "PM")
+    #text = '2/15/2021 2:35 PM'
+    #print(text)
 
-    # Try parsing when text is some datetime value e.g. 2/15/2021 2:35 P.M.
-    if not time_only:
-        for fmt in ('%m/%d/%Y %I:%M %p', '%Y-%m-%d %I:%M %p'):
-            try:
-                return datetime.strptime(text, fmt)
-            except ValueError:
-                continue
-        raise ValueError(
-            f"{text} does not match a valid datetime format of '%m/%d/%Y %I:%M %p' or '%Y-%m-%d %I:%M %p'. Make sure your WhatsApp language settings on your phone are set to English.")
+    ## Try parsing when text is some datetime value e.g. 2/15/2021 2:35 P.M.
+    #if not time_only:
+    #    for fmt in ('%m/%d/%Y %I:%M %p'):
+    #        try:
+    #            return datetime.strptime(text, fmt)
+    #        except ValueError:
+    #            continue
+    #        raise ValueError(
+    #            f"{text} does not match a valid datetime format of '%m/%d/%Y %I:%M %p' or '%Y-%m-%d %I:%M %p'. Make sure your WhatsApp language settings on your phone are set to English.")
 
-    # Try parsing when text is some time value e.g. 2:35 PM
-    else:
-        try:
-            return datetime.strptime(text, '%I:%M %p')
-        except ValueError:
-            pass
-        raise ValueError(
-            f"{text} does not match expected time format of '%I:%M %p'. Make sure your WhatsApp language settings on your phone are set to English.")
+    ## Try parsing when text is some time value e.g. 2:35 PM
+    #else:
+    #    try:
+    #        return datetime.strptime(text, '%I:%M %p')
+    #    except ValueError:
+    #        pass
+    #    raise ValueError(
+    #        f"{text} does not match expected time format of '%I:%M %p'. Make sure your WhatsApp language settings on your phone are set to English.")
 
 
 def is_media_in_message(message):
