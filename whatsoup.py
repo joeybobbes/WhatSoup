@@ -30,7 +30,7 @@ def main():
     chats = get_chats(driver)
 
     # Print chat summary
-    print_chats(chats)
+    # print_chats(chats)
 
     # Prompt user to select a chat for export, then locate and load it in WhatsApp
     finished = False
@@ -60,6 +60,8 @@ def main():
             # Load entire chat history
             chat_is_loaded = load_selected_chat(driver)
 
+        breakpoint()
+
         # Scrape the chat history
         scraped = scrape_chat(driver)
 
@@ -84,8 +86,8 @@ def setup_selenium():
     # CHROME_PROFILE = os.getenv('CHROME_PROFILE')
     DRIVER_PATH = '/Users/joelkropelin/env/chromedriver'
     CHROME_PROFILE = '/Users/joelkropelin/Library/Application Support/Google/Chrome/Profile 1'
-    print(DRIVER_PATH)
-    print(CHROME_PROFILE)
+    print('DRIVER_PATH: ', DRIVER_PATH)
+    print('DRIVER_PATH: ', CHROME_PROFILE)
 
     # Configure selenium
     options = webdriver.ChromeOptions()
@@ -365,13 +367,14 @@ def select_chat(chats):
 
 
 def load_selected_chat(driver):
+    breakpoint()
     '''Loads entire chat history by repeatedly scrolling up to fetch more data from WhatsApp'''
     start = timer()
     print("Loading messages...", end="\r")
 
     # Set focus to chat window (xpath == div element w/ aria-label set to 'Message list. Press right arrow key...')
     message_list_element = driver.find_element_by_xpath(
-        "//*[@id='main']/div[3]/div/div/div[contains(@aria-label,'Message list')]")
+        "//*[@id='main']/div[3]/div/div/div[contains(@aria-label,'Nachrichtenliste')]")
     message_list_element.send_keys(Keys.NULL)
 
     # Get scroll height of the chat pane div so we can calculate if new messages were loaded
@@ -477,8 +480,9 @@ def find_selected_chat(driver, selected_chat):
     # Wait for search results to load (5 sec max)
     try:
         # Look for the unique class that holds 'Search results.'
-        WebDriverWait(driver, 5).until(expected_conditions.presence_of_element_located(
-            (By.XPATH, "//*[@id='pane-side']/div[1]/div/div[contains(@aria-label,'Search results.')]")))
+        WebDriverWait(driver, 2).until(expected_conditions.presence_of_element_located(
+            (By.XPATH, "//*[@id='pane-side']/div[1]/div/div[contains(@aria-label,'Suchergebnisse')]")))
+        breakpoint()
 
         # Force small sleep to deal with issue where focus gets interrupted after wait
         sleep(2)
@@ -810,33 +814,35 @@ def find_chat_datetime_when_copyable_does_not_exist(message, last_msg_date):
 
 
 def parse_datetime(text, time_only=False):
-    return datetime.strptime('2/15/2021 2:35 PM', '%m/%d/%Y %I:%M %p')
-    #'''Try parsing and returning datetimes in a North American standard, otherwise raise a ValueError'''
-    ## TODO lazy approach to handling variances of North America date/time values MM/DD/YYYY AM/PM or YYYY-MM-DD A.M./P.M.
+    # TODO if called with time_only=True then sometimes corrupt raw data
+    # return datetime.strptime('2/15/2021 2:35 PM', '%m/%d/%Y %I:%M %p')
+    '''Try parsing and returning datetimes in, otherwise raise a ValueError'''
 
-    ## Normalize the text
-    ## text = text.upper().replace("A.M.", "AM").replace("P.M.", "PM")
-    #text = '2/15/2021 2:35 PM'
-    #print(text)
+    print("raw input: ", text, "time_only=", time_only)
+    breakpoint()
 
-    ## Try parsing when text is some datetime value e.g. 2/15/2021 2:35 P.M.
-    #if not time_only:
-    #    for fmt in ('%m/%d/%Y %I:%M %p'):
-    #        try:
-    #            return datetime.strptime(text, fmt)
-    #        except ValueError:
-    #            continue
-    #        raise ValueError(
-    #            f"{text} does not match a valid datetime format of '%m/%d/%Y %I:%M %p' or '%Y-%m-%d %I:%M %p'. Make sure your WhatsApp language settings on your phone are set to English.")
+    # Normalize the text
+    # text = text.upper()
 
-    ## Try parsing when text is some time value e.g. 2:35 PM
-    #else:
-    #    try:
-    #        return datetime.strptime(text, '%I:%M %p')
-    #    except ValueError:
-    #        pass
-    #    raise ValueError(
-    #        f"{text} does not match expected time format of '%I:%M %p'. Make sure your WhatsApp language settings on your phone are set to English.")
+    # define time format
+    fmt = '%m/%d/%Y %H:%M'
+
+    # Try parsing when text is some datetime value e.g. 2/15/2021 2:35
+    if not time_only:
+        try:
+            return datetime.strptime(text, fmt)
+        except ValueError:
+            return datetime.strptime('1/1/1000 00:00', '%m/%d/%Y %H:%M')
+        raise ValueError(f"{text} does not match a valid datetime format of '%m/%d/%Y %I:%M'.")
+
+    # Try parsing when text is some time value e.g. 2:35 PM
+    else:
+        try:
+            return datetime.strptime(text, '%I:%M')
+        except ValueError:
+            return datetime.strptime('00:00', '%H:%M')
+        raise ValueError(
+            f"{text} does not match expected time format of '%I:%M %p'. Make sure your WhatsApp language settings on your phone are set to English.")
 
 
 def is_media_in_message(message):
