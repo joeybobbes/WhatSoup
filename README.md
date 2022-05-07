@@ -1,3 +1,11 @@
+# Fork from WhatSoup by joeybobbes
+* adapt/fix for local use on a macbook air mac osx mavericks
+* added interactive debug functionality
+* prepared for automated testing
+
+see below the original README.md
+-------------------------------------------------------------------------
+
 # WhatSoup 🍲
 
 A (deprecated) web scraper that exports your entire WhatsApp chat history.
